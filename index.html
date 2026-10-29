@@ -6,18 +6,11 @@
     <title>Spacer Ranking - Standoff 2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg: #0f1115; --panel: #1a1d24; --text: #ffffff; --muted: #8b8e96;
-            --accent: #3b82f6; --green: #10b981; --red: #ef4444;
-            --gold: #fbbf24; --silver: #9ca3af; --bronze: #b45309;
-        }
+        :root { --bg: #0f1115; --panel: #1a1d24; --text: #fff; --muted: #8b8e96; --accent: #3b82f6; --green: #10b981; --red: #ef4444; --gold: #fbbf24; --silver: #9ca3af; --bronze: #b45309; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden; }
-
         .page { display: none; padding: 20px; }
         .page.active { display: block; }
-        
-        /* Формы */
         .box { background: var(--panel); padding: 20px; border-radius: 12px; max-width: 400px; margin: 20px auto; }
         input { width: 100%; padding: 12px; margin-bottom: 15px; background: #2a2e37; border: 1px solid #444; border-radius: 8px; color: #fff; }
         button { width: 100%; padding: 12px; margin-top: 10px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
@@ -25,14 +18,10 @@
         button.sec { background: transparent; border: 1px solid #444; }
         button.danger { background: var(--red); }
         .err { color: var(--red); font-size: 14px; margin-bottom: 10px; display: none; text-align: center; font-weight: bold; }
-
-        /* Навигация */
         #nav { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: rgba(26,29,36,0.95); display: none; justify-content: space-around; width: 95%; max-width: 500px; padding: 10px; border-radius: 20px; border: 1px solid #2a2e37; z-index: 100; }
         .nav-btn { background: none; color: var(--muted); border: none; font-size: 11px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; width: auto; margin: 0; padding: 5px;}
         .nav-btn.active { color: var(--accent); }
         .icon { font-size: 18px; }
-
-        /* Топ */
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 10px; height: 180px; margin-top: 20px; }
         .pod { display: flex; flex-direction: column; align-items: center; width: 90px; }
         .pod .av { width: 50px; height: 50px; background: #2a2e37; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; border: 2px solid transparent; margin-bottom: 5px; }
@@ -45,20 +34,14 @@
         .p2 .base { height: 65px; background: linear-gradient(to top, #1a1d24, var(--silver)); }
         .p3 .av { border-color: var(--bronze); }
         .p3 .base { height: 45px; background: linear-gradient(to top, #1a1d24, var(--bronze)); }
-
         .row { display: flex; align-items: center; background: var(--panel); padding: 12px; border-radius: 12px; margin-bottom: 10px; }
         .row .av-sm { width: 40px; height: 40px; background: #2a2e37; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 12px; }
         .row .info { flex-grow: 1; }
         .row .nm { font-weight: bold; }
-        .row .clan { color: var(--green); font-size: 12px; }
         .row .elo { color: var(--accent); font-weight: bold; }
-
-        /* Лобби */
         .lobby-item { display: flex; align-items: center; background: var(--panel); padding: 12px; border-radius: 12px; margin-bottom: 10px; }
         .lobby-item.empty { opacity: 0.5; border: 1px dashed #444; background: transparent; }
         .btn-kick { width: 30px; padding: 5px; margin: 0; background: var(--red); border-radius: 6px; }
-
-        /* Матч */
         .teams { display: flex; gap: 10px; margin-top: 20px; }
         .team { flex: 1; background: var(--panel); padding: 10px; border-radius: 12px; }
         .team h3 { text-align: center; margin-bottom: 10px; color: var(--accent); }
@@ -67,8 +50,6 @@
         .map { padding: 12px; background: var(--panel); border: 1px solid #444; border-radius: 8px; color: #fff; text-align: center; cursor: pointer; font-weight: bold; }
         .map.banned { opacity: 0.3; text-decoration: line-through; border-color: var(--red); }
         .chat { background: var(--panel); height: 120px; overflow-y: auto; border-radius: 12px; margin-top: 15px; padding: 10px; font-size: 12px; }
-
-        /* Профиль */
         .prof-head { display: flex; gap: 15px; background: var(--panel); padding: 20px; border-radius: 12px; }
         .prof-av { width: 80px; height: 80px; background: #2a2e37; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; border: 2px solid var(--accent); }
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
@@ -79,7 +60,6 @@
 </head>
 <body>
 
-    <!-- 1. ВХОД -->
     <div id="pg-login" class="page active">
         <div class="box">
             <h2 style="text-align:center; margin-bottom:15px;">Вход</h2>
@@ -91,7 +71,6 @@
         </div>
     </div>
 
-    <!-- 2. РЕГИСТРАЦИЯ -->
     <div id="pg-reg" class="page">
         <div class="box">
             <h2 style="text-align:center; margin-bottom:15px;">Регистрация</h2>
@@ -104,29 +83,24 @@
         </div>
     </div>
 
-    <!-- 3. ГЛАВНАЯ -->
     <div id="pg-home" class="page">
         <h2>Топ игроков</h2>
         <div class="podium" id="podium"></div>
         <div id="list" style="margin-top:20px;"></div>
     </div>
 
-    <!-- 4. ДРУЗЬЯ -->
     <div id="pg-friends" class="page">
         <h2>Друзья</h2>
         <input type="text" id="f-input" placeholder="Введите ник или ID друга">
         <button onclick="addFriend()">Добавить в лобби</button>
-        <div id="friends-list" style="margin-top:20px;"></div>
     </div>
 
-    <!-- 5. ИГРАТЬ (Лобби) -->
     <div id="pg-play" class="page">
         <h2>Лобби</h2>
         <div id="lobby-list"></div>
         <button id="btn-play" onclick="startMatch()" style="margin-top:20px;">ИГРАТЬ</button>
     </div>
 
-    <!-- 6. МАТЧ -->
     <div id="pg-match" class="page">
         <h2 id="match-status" style="text-align:center;">Поиск матча...</h2>
         <div id="match-content" style="display:none;">
@@ -138,7 +112,7 @@
                 <div class="team"><h3>КТ</h3><div id="team-ct"></div></div>
                 <div class="team"><h3>Т</h3><div id="team-t"></div></div>
             </div>
-            <h3 style="margin-top:20px; font-size:14px; color:var(--muted);">Бан карт (Чей ход: Ваш)</h3>
+            <h3 style="margin-top:20px; font-size:14px; color:var(--muted);">Бан карт</h3>
             <div class="maps" id="maps"></div>
             <div class="chat" id="chat"></div>
             <input type="text" id="chat-inp" placeholder="Сообщение..." style="margin-top:5px;">
@@ -147,7 +121,6 @@
         </div>
     </div>
 
-    <!-- 7. ПРОФИЛЬ -->
     <div id="pg-profile" class="page">
         <div class="prof-head">
             <div class="prof-av" id="p-av">A</div>
@@ -165,7 +138,6 @@
         <button class="sec" style="margin-top:20px; color:var(--red); border-color:var(--red);" onclick="logout()">Выйти</button>
     </div>
 
-    <!-- НАВИГАЦИЯ -->
     <div id="nav">
         <button class="nav-btn active" onclick="nav('pg-home', this)"><span class="icon">⌂</span>Главная</button>
         <button class="nav-btn" onclick="nav('pg-friends', this)"><span class="icon">👥</span>Друзья</button>
@@ -191,7 +163,7 @@
             show(id);
         }
 
-        // --- 1. РЕГИСТРАЦИЯ ---
+        // РЕГИСТРАЦИЯ С ЗАЩИТОЙ ОТ ОШИБОК СЕТИ
         async function doRegister() {
             const btn = document.getElementById('btn-reg');
             const err = document.getElementById('err-reg');
@@ -205,29 +177,31 @@
             
             btn.innerText = "Загрузка..."; btn.disabled = true;
 
-            const { data, error } = await db.auth.signUp({ email, password: pass });
-            
-            if (error) {
-                err.innerText = error.message; err.style.display = 'block';
-                btn.innerText = "Создать аккаунт"; btn.disabled = false;
-                return;
-            }
-
-            if (data.user) {
-                const { error: dbErr } = await db.from('players').insert([{
-                    username: name, auth_user_id: data.user.id, elo: 1000, level: 1, wins: 0, losses: 0, evo: 0
-                }]);
+            try {
+                const { data, error } = await db.auth.signUp({ email, password: pass });
                 
-                if (dbErr) {
-                    err.innerText = "Ошибка БД: " + dbErr.message; err.style.display = 'block';
-                    btn.innerText = "Создать аккаунт"; btn.disabled = false;
-                } else {
-                    initUser(); // Автоматический вход
+                if (error) throw error;
+
+                if (data.user) {
+                    const { error: dbErr } = await db.from('players').insert([{
+                        username: name, auth_user_id: data.user.id, elo: 1000, level: 1, wins: 0, losses: 0, evo: 0
+                    }]);
+                    
+                    if (dbErr) throw dbErr;
+                    initUser();
                 }
+            } catch (e) {
+                // Если ошибка сети (Failed to fetch), выводим понятный текст
+                if (e.message.includes("fetch") || e.message.includes("network")) {
+                    err.innerText = "Ошибка сети. Проверьте интернет или откройте файл через Chrome.";
+                } else {
+                    err.innerText = e.message;
+                }
+                err.style.display = 'block';
+                btn.innerText = "Создать аккаунт"; btn.disabled = false;
             }
         }
 
-        // --- 2. ВХОД ---
         async function doLogin() {
             const btn = document.getElementById('btn-login');
             const err = document.getElementById('err-login');
@@ -240,31 +214,37 @@
 
             btn.innerText = "Загрузка..."; btn.disabled = true;
 
-            const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
-            
-            if (error) {
-                err.innerText = "Неверный Email или Пароль"; err.style.display = 'block';
+            try {
+                const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
+                if (error) throw error;
+                initUser();
+            } catch (e) {
+                err.innerText = "Неверный Email или Пароль (или ошибка сети)";
+                err.style.display = 'block';
                 btn.innerText = "Войти"; btn.disabled = false;
-                return;
             }
-            initUser();
         }
 
         async function initUser() {
-            const { data: { session } } = await db.auth.getSession();
-            if (!session) return;
-            
-            const { data } = await db.from('players').select('*').eq('auth_user_id', session.user.id).single();
-            if (!data) return document.getElementById('err-login').innerText = "Профиль не найден";
+            try {
+                const { data: { session } } = await db.auth.getSession();
+                if (!session) return;
+                
+                const { data } = await db.from('players').select('*').eq('auth_user_id', session.user.id).single();
+                if (!data) throw new Error("Профиль не найден");
 
-            user = data;
-            document.getElementById('nav').style.display = 'flex';
-            document.getElementById('pg-login').style.display = 'none';
-            document.getElementById('pg-reg').style.display = 'none';
-            
-            nav('pg-home', document.querySelector('.nav-btn'));
-            loadProfile();
-            renderLobby();
+                user = data;
+                document.getElementById('nav').style.display = 'flex';
+                document.getElementById('pg-login').style.display = 'none';
+                document.getElementById('pg-reg').style.display = 'none';
+                
+                nav('pg-home', document.querySelector('.nav-btn'));
+                loadProfile();
+                renderLobby();
+            } catch (e) {
+                document.getElementById('err-login').innerText = "Ошибка загрузки профиля: " + e.message;
+                document.getElementById('err-login').style.display = 'block';
+            }
         }
 
         async function logout() {
@@ -272,29 +252,31 @@
             location.reload();
         }
 
-        // --- 3. ГЛАВНАЯ (ТОП) ---
         async function loadTop() {
-            const { data } = await db.from('players').select('*').order('elo', { ascending: false }).limit(20);
-            const pod = document.getElementById('podium');
-            const list = document.getElementById('list');
-            pod.innerHTML = ''; list.innerHTML = '';
+            try {
+                const { data } = await db.from('players').select('*').order('elo', { ascending: false }).limit(20);
+                const pod = document.getElementById('podium');
+                const list = document.getElementById('list');
+                pod.innerHTML = ''; list.innerHTML = '';
 
-            if (data && data.length > 0) {
-                const p1 = data[0], p2 = data[1] || {username:'---', level:0}, p3 = data[2] || {username:'---', level:0};
-                pod.innerHTML = `
-                    <div class="pod p2"><div class="av">${p2.username[0]}</div><div class="nm">${p2.username}</div><div class="lvl">LVL ${p2.level}</div><div class="base"></div></div>
-                    <div class="pod p1"><div class="av">${p1.username[0]}</div><div class="nm">${p1.username}</div><div class="lvl">LVL ${p1.level} • EVO ${p1.evo}</div><div class="base"></div></div>
-                    <div class="pod p3"><div class="av">${p3.username[0]}</div><div class="nm">${p3.username}</div><div class="lvl">LVL ${p3.level}</div><div class="base"></div></div>
-                `;
-            }
-            if (data) {
-                data.slice(3).forEach((p, i) => {
-                    list.innerHTML += `<div class="row"><div class="av-sm">${p.username[0]}</div><div class="info"><div class="nm">${p.username}</div><div style="font-size:10px; color:var(--muted)">LVL ${p.level}</div></div><div class="elo">${p.elo}</div></div>`;
-                });
+                if (data && data.length > 0) {
+                    const p1 = data[0], p2 = data[1] || {username:'---', level:0}, p3 = data[2] || {username:'---', level:0};
+                    pod.innerHTML = `
+                        <div class="pod p2"><div class="av">${p2.username[0]}</div><div class="nm">${p2.username}</div><div class="lvl">LVL ${p2.level}</div><div class="base"></div></div>
+                        <div class="pod p1"><div class="av">${p1.username[0]}</div><div class="nm">${p1.username}</div><div class="lvl">LVL ${p1.level}</div><div class="base"></div></div>
+                        <div class="pod p3"><div class="av">${p3.username[0]}</div><div class="nm">${p3.username}</div><div class="lvl">LVL ${p3.level}</div><div class="base"></div></div>
+                    `;
+                }
+                if (data) {
+                    data.slice(3).forEach((p, i) => {
+                        list.innerHTML += `<div class="row"><div class="av-sm">${p.username[0]}</div><div class="info"><div class="nm">${p.username}</div><div style="font-size:10px; color:var(--muted)">LVL ${p.level}</div></div><div class="elo">${p.elo}</div></div>`;
+                    });
+                }
+            } catch (e) {
+                console.error("Ошибка топа:", e);
             }
         }
 
-        // --- 4. ПРОФИЛЬ ---
         function loadProfile() {
             if (!user) return;
             document.getElementById('p-av').innerText = user.username[0];
@@ -309,21 +291,24 @@
             document.getElementById('p-wr').innerText = t === 0 ? '0%' : Math.round((w/t)*100) + '%';
         }
 
-        // --- 5. ДРУЗЬЯ И ЛОББИ ---
         async function addFriend() {
             const inp = document.getElementById('f-input').value.trim();
             if (!inp) return;
             if (lobby.length >= 4) return alert("Лобби заполнено (макс 5)");
 
-            const { data } = await db.from('players').select('*').or(`id.eq.${inp},username.eq.${inp}`).single();
-            if (!data) return alert("Игрок не найден");
-            if (data.id === user.id) return alert("Это вы");
-            if (lobby.find(p => p.id === data.id)) return alert("Уже в лобби");
+            try {
+                const { data } = await db.from('players').select('*').or(`id.eq.${inp},username.eq.${inp}`).single();
+                if (!data) return alert("Игрок не найден");
+                if (data.id === user.id) return alert("Это вы");
+                if (lobby.find(p => p.id === data.id)) return alert("Уже в лобби");
 
-            lobby.push(data);
-            document.getElementById('f-input').value = '';
-            renderLobby();
-            nav('pg-play', document.querySelectorAll('.nav-btn')[2]);
+                lobby.push(data);
+                document.getElementById('f-input').value = '';
+                renderLobby();
+                nav('pg-play', document.querySelectorAll('.nav-btn')[2]);
+            } catch (e) {
+                alert("Ошибка поиска игрока: " + e.message);
+            }
         }
 
         function renderLobby() {
@@ -344,7 +329,6 @@
 
         function kick(i) { lobby.splice(i, 1); renderLobby(); }
 
-        // --- 6. МАТЧ ---
         function startMatch() {
             document.getElementById('match-status').innerText = "Поиск (Игроков онлайн: 1245)...";
             document.getElementById('match-content').style.display = 'none';
@@ -402,7 +386,6 @@
             nav('pg-play', document.querySelectorAll('.nav-btn')[2]);
         }
 
-        // Проверка при загрузке
         db.auth.onAuthStateChange((e, s) => { if (s && !user) initUser(); });
 
     </script>
