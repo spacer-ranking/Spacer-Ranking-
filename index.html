@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spacer Ranking - Standoff 2</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #0f1115; --panel-bg: #1a1d24; --text-main: #ffffff; --text-muted: #8b8e96;
+            --accent: #3b82f6; --accent-hover: #2563eb; --green: #10b981; --red: #ef4444;
+            --gold: #fbbf24; --silver: #9ca3af; --bronze: #b45309; --border-radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 90px; overflow-x: hidden; }
+
+        /* Экраны */
+        .screen { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Авторизация */
+        .auth-container { max-width: 400px; margin: 40px auto; background: var(--panel-bg); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .auth-container h2 { text-align: center; margin-bottom: 20px; font-weight: 600; }
+        .input-group { margin-bottom: 15px; }
+        .input-group input { width: 100%; padding: 12px; background: #2a2e37; border: 1px solid #3f4451; border-radius: 8px; color: white; outline: none; transition: 0.2s; }
+        .input-group input:focus { border-color: var(--accent); }
+        .btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn:hover { background: var(--accent-hover); }
+        .btn-secondary { background: transparent; border: 1px solid #3f4451; }
+        .btn-danger { background: var(--red); }
+        .btn-danger:hover { background: #dc2626; }
+        
+        /* Навигация */
+        .bottom-nav {
+            position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(26, 29, 36, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: space-around; align-items: center;
+            width: 90%; max-width: 500px; padding: 12px 20px; border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); z-index: 1000; border: 1px solid #2a2e37;
+        }
+        .nav-item { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.2s; }
+        .nav-item.active, .nav-item:hover { color: var(--accent); }
+        .nav-icon { font-size: 20px; font-weight: bold; }
+
+        /* Топ игроков */
+        .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-top: 30px; height: 180px; }
+        .podium-place { display: flex; flex-direction: column; align-items: center; width: 80px; }
+        .podium-place .avatar { width: 50px; height: 50px; background: #2a2e37; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; margin-bottom: 8px; border: 2px solid transparent; }
+        .podium-place .name { font-size: 12px; font-weight: bold; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+        .podium-place .level { font-size: 10px; color: var(--text-muted); }
+        .podium-place .pedestal { width: 100%; border-radius: 8px 8px 0 0; margin-top: 10px; }
+        .p1 .avatar { border-color: var(--gold); width: 60px; height: 60px; }
+        .p1 .pedestal { height: 100px; background: linear-gradient(to top, #1a1d24, #fbbf24); }
+        .p2 .avatar { border-color: var(--silver); }
+        .p2 .pedestal { height: 70px; background: linear-gradient(to top, #1a1d24, #9ca3af); }
+        .p3 .avatar { border-color: var(--bronze); }
+        .p3 .pedestal { height: 50px; background: linear-gradient(to top, #1a1d24, #b45309); }
+
+        /* Список */
+        .player-list { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .player-row { display: flex; align-items: center; background: var(--panel-bg); padding: 12px; border-radius: var(--border-radius); }
+        .player-row .rank { width: 30px; font-weight: bold; color: var(--text-muted); }
+        .player-row .avatar-sm { width: 40px; height: 40px; background: #2a2e37; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 12px; }
+        .player-row .info { flex-grow: 1; }
+        .player-row .info .name { font-weight: bold; font-size: 14px; }
+        .player-row .info .clan { color: var(--green); font-size: 12px; margin-left: 5px; }
+        .player-row .info .stats { font-size: 11px; color: var(--text-muted); }
+        .player-row .elo { font-weight: bold; color: var(--accent); }
+
+        /* Профиль */
+        .profile-header { display: flex; align-items: center; gap: 20px; background: var(--panel-bg); padding: 20px; border-radius: var(--border-radius); }
+        .profile-avatar { width: 80px; height: 80px; background: #2a2e37; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 36px; font-weight: bold; border: 2px solid var(--accent); }
+        .profile-info h2 { margin-bottom: 5px; }
+        .profile-info .badge { background: #2a2e37; padding: 4px 8px; border-radius: 6px; font-size: 12px; color: var(--text-muted); margin-right: 5px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .stat-card { background: var(--panel-bg); padding: 15px; border-radius: var(--border-radius); text-align: center; }
+        .stat-card h3 { color: var(--text-muted); font-size: 12px; margin-bottom: 10px; text-transform: uppercase; }
+        .stat-card p { font-size: 24px; font-weight: bold; }
+
+        /* Лобби */
+        .lobby-slot { display: flex; align-items: center; background: var(--panel-bg); padding: 12px; border-radius: var(--border-radius); margin-bottom: 10px; }
+        .lobby-slot .avatar-sm { width: 40px; height: 40px; background: #2a2e37; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 12px; }
+        .lobby-slot .name { flex-grow: 1; font-weight: bold; }
+        .lobby-slot.empty { opacity: 0.5; border: 1px dashed #3f4451; background: transparent; }
+
+        /* Матч */
+        .match-teams { display: flex; gap: 10px; margin-top: 20px; }
+        .team-col { flex: 1; background: var(--panel-bg); padding: 10px; border-radius: var(--border-radius); }
+        .team-col h3 { text-align: center; margin-bottom: 10px; color: var(--accent); }
+        .match-player { font-size: 12px; padding: 5px 0; border-bottom: 1px solid #2a2e37; }
+        .map-ban-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+        .map-btn { padding: 12px; background: var(--panel-bg); border: 1px solid #3f4451; border-radius: 8px; color: white; cursor: pointer; text-align: center; font-weight: bold; transition: 0.2s; }
+        .map-btn.banned { text-decoration: line-through; opacity: 0.4; border-color: var(--red); cursor: not-allowed; }
+        .map-btn:hover:not(.banned) { border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <!-- АВТОРИЗАЦИЯ -->
+    <div id="screen-auth" class="screen active">
+        <div class="auth-container">
+            <h2 id="auth-title">Вход</h2>
+            <div class="input-group" id="group-username" style="display:none;">
+                <input type="text" id="auth-username" placeholder="Игровой никнейм">
+            </div>
+            <div class="input-group">
+                <input type="email" id="auth-email" placeholder="Email">
+            </div>
+            <div class="input-group">
+                <input type="password" id="auth-password" placeholder="Пароль">
+            </div>
+            <button class="btn" onclick="handleAuth()" id="btn-auth-submit">Войти</button>
+            <button class="btn btn-secondary" onclick="toggleAuthMode()" id="btn-auth-toggle">Нет аккаунта? Регистрация</button>
+        </div>
+    </div>
+
+    <!-- ГЛАВНАЯ -->
+    <div id="screen-home" class="screen">
+        <h1>Spacer Ranking</h1>
+        <div class="podium" id="podium-container"></div>
+        <div class="player-list" id="player-list-container"></div>
+    </div>
+
+    <!-- ПРОФИЛЬ -->
+    <div id="screen-profile" class="screen">
+        <div class="profile-header">
+            <div class="profile-avatar" id="prof-avatar">A</div>
+            <div class="profile-info">
+                <h2 id="prof-username">Загрузка...</h2>
+                <span class="badge" id="prof-level">LVL 1</span>
+                <span class="badge" id="prof-id">ID: 0</span>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Победы</h3><p id="prof-wins">0</p></div>
+            <div class="stat-card"><h3>Поражения</h3><p id="prof-losses">0</p></div>
+            <div class="stat-card"><h3>Winrate</h3><p id="prof-winrate">0%</p></div>
+            <div class="stat-card"><h3>ELO</h3><p id="prof-elo">1000</p></div>
+        </div>
+        <button class="btn btn-danger" style="margin-top: 20px;" onclick="logout()">Выйти</button>
+    </div>
+
+    <!-- ДРУЗЬЯ -->
+    <div id="screen-friends" class="screen">
+        <h1>Друзья</h1>
+        <div class="input-group">
+            <input type="text" id="friend-input" placeholder="Введите ID друга">
+        </div>
+        <button class="btn" onclick="alert('Функция поиска друзей в разработке!')">Добавить</button>
+    </div>
+
+    <!-- ИГРАТЬ -->
+    <div id="screen-play" class="screen">
+        <h1>Лобби</h1>
+        <div id="lobby-list"></div>
+        <button class="btn" id="btn-play" onclick="startSearch()" style="margin-top:20px;">ИГРАТЬ</button>
+    </div>
+
+    <!-- МАТЧ -->
+    <div id="screen-match" class="screen">
+        <h2 id="match-title" style="text-align:center; margin-bottom:20px;">Поиск матча...</h2>
+        <div id="match-content" style="display:none;">
+            <div class="match-teams">
+                <div class="team-col"><h3>КОМАНДА КТ</h3><div id="team-ct"></div></div>
+                <div class="team-col"><h3>КОМАНДА Т</h3><div id="team-t"></div></div>
+            </div>
+            <h3 style="margin-top:20px; text-align:center;">Баны карт</h3>
+            <div class="map-ban-list" id="map-ban-list"></div>
+            <button class="btn btn-danger" onclick="cancelMatch()" style="margin-top:20px;">Отменить матч</button>
+        </div>
+    </div>
+
+    <!-- НАВИГАЦИЯ -->
+    <div class="bottom-nav" id="main-nav" style="display:none;">
+        <div class="nav-item" onclick="navTo('home', this)"><span class="nav-icon">⌂</span><span>Главная</span></div>
+        <div class="nav-item" onclick="navTo('friends', this)"><span class="nav-icon">👥</span><span>Друзья</span></div>
+        <div class="nav-item" onclick="navTo('play', this)"><span class="nav-icon">▶</span><span>Играть</span></div>
+        <div class="nav-item" onclick="navTo('profile', this)"><span class="nav-icon">👤</span><span>Профиль</span></div>
+    </div>
+
+    <script>
+        // ВАШИ КЛЮЧИ SUPABASE
+        const supabase = window.supabase.createClient(
+            'https://gczavlghcxpjouuxalmf.supabase.co',
+            'sb_publishable_go2KJ6nZ5KdxewNnVCs6kA_qTJMq-rj'
+        );
+
+        let currentUser = null;
+        let isLoginMode = true;
+        let matchChannel = null;
+
+        // --- 1. АВТОРИЗАЦИЯ ---
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-title').innerText = isLoginMode ? 'Вход' : 'Регистрация';
+            document.getElementById('btn-auth-submit').innerText = isLoginMode ? 'Войти' : 'Создать аккаунт';
+            document.getElementById('btn-auth-toggle').innerText = isLoginMode ? 'Нет аккаунта? Регистрация' : 'Есть аккаунт? Войти';
+            document.getElementById('group-username').style.display = isLoginMode ? 'none' : 'block';
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const username = document.getElementById('auth-username').value;
+
+            if (isLoginMode) {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) return alert('Ошибка входа: ' + error.message);
+                initUser();
+            } else {
+                if (!username) return alert('Введите игровой никнейм');
+                
+                // Создаем Auth пользователя
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (error) return alert('Ошибка регистрации: ' + error.message);
+                
+                // Записываем в таблицу players
+                if (data.user) {
+                    const { error: dbError } = await supabase.from('players').insert([{
+                        username: username,
+                        auth_user_id: data.user.id,
+                        elo: 1000,
+                        level: 1,
+                        wins: 0,
+                        losses: 0,
+                        evo: 0
+                    }]);
+                    
+                    if (dbError) {
+                        console.error(dbError);
+                        alert('Ошибка БД: ' + dbError.message);
+                    } else {
+                        alert('Аккаунт создан! Войдите.');
+                        toggleAuthMode(); 
+                    }
+                }
+            }
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            location.reload();
+        }
+
+        // --- 2. ИНИЦИАЛИЗАЦИЯ ---
+        async function initUser() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Ищем игрока по auth_user_id
+            const { data: player, error } = await supabase
+                .from('players')
+                .select('*')
+                .eq('auth_user_id', user.id)
+                .single();
+            
+            if (error || !player) {
+                alert('Ваш профиль не найден в базе!');
+                return logout();
+            }
+
+            currentUser = player;
+
+            // Показываем интерфейс
+            document.getElementById('screen-auth').classList.remove('active');
+            document.getElementById('main-nav').style.display = 'flex';
+            document.querySelectorAll('.nav-item')[0].classList.add('active');
+            document.getElementById('screen-home').classList.add('active');
+            
+            loadTopPlayers();
+            loadProfile(player);
+            renderLobby();
+        }
+
+        function navTo(screenId, element) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('screen-' + screenId).classList.add('active');
+            element.classList.add('active');
+        }
+
+        // --- 3. ГЛАВНАЯ ---
+        async function loadTopPlayers() {
+            const { data: players, error } = await supabase
+                .from('players').select('*').order('elo', { ascending: false }).limit(20);
+            
+            if (error) return console.error(error);
+
+            const podium = document.getElementById('podium-container');
+            const list = document.getElementById('player-list-container');
+            podium.innerHTML = ''; list.innerHTML = '';
+
+            if (players && players.length > 0) {
+                const p1 = players[0];
+                const p2 = players[1] || { username: '---', level: 0, elo: 0 };
+                const p3 = players[2] || { username: '---', level: 0, elo: 0 };
+
+                // Пьедестал (1, 2, 3 места)
+                podium.innerHTML = `
+                    <div class="podium-place p2">
+                        <div class="avatar">${p2.username[0].toUpperCase()}</div>
+                        <div class="name">${p2.username}</div>
+                        <div class="level">LVL ${p2.level}</div>
+                        <div class="pedestal"></div>
+                    </div>
+                    <div class="podium-place p1">
+                        <div class="avatar">${p1.username[0].toUpperCase()}</div>
+                        <div class="name">${p1.username}</div>
+                        <div class="level">LVL ${p1.level}</div>
+                        <div class="pedestal"></div>
+                    </div>
+                    <div class="podium-place p3">
+                        <div class="avatar">${p3.username[0].toUpperCase()}</div>
+                        <div class="name">${p3.username}</div>
+                        <div class="level">LVL ${p3.level}</div>
+                        <div class="pedestal"></div>
+                    </div>
+                `;
+            }
+
+            // Список с 4 места
+            if (players) {
+                players.slice(3).forEach((p, i) => {
+                    list.innerHTML += `
+                        <div class="player-row">
+                            <div class="rank">#${i + 4}</div>
+                            <div class="avatar-sm">${p.username[0].toUpperCase()}</div>
+                            <div class="info">
+                                <div class="name">${p.username} ${p.clan_tag ? `<span class="clan">[${p.clan_tag}]</span>` : ''}</div>
+                                <div class="stats">LVL ${p.level} • EVO ${p.evo || 0}</div>
+                            </div>
+                            <div class="elo">${p.elo}</div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // --- 4. ПРОФИЛЬ ---
+        function loadProfile(player) {
+            document.getElementById('prof-avatar').innerText = player.username[0].toUpperCase();
+            document.getElementById('prof-username').innerText = player.username;
+            document.getElementById('prof-level').innerText = `LVL ${player.level}`;
+            document.getElementById('prof-id').innerText = `ID: ${player.id}`;
+            document.getElementById('prof-elo').innerText = player.elo;
+            
+            const wins = player.wins || 0, losses = player.losses || 0, total = wins + losses;
+            const winrate = total === 0 ? 0 : Math.round((wins / total) * 100);
+            
+            document.getElementById('prof-wins').innerText = wins;
+            document.getElementById('prof-losses').innerText = losses;
+            document.getElementById('prof-winrate').innerText = winrate + '%';
+        }
+
+        // --- 5. ЛОББИ ---
+        function renderLobby() {
+            const container = document.getElementById('lobby-list');
+            container.innerHTML = '';
+            
+            if (currentUser) {
+                container.innerHTML += `
+                    <div class="lobby-slot">
+                        <div class="avatar-sm">${currentUser.username[0].toUpperCase()}</div>
+                        <div class="name">${currentUser.username} (Вы)</div>
+                    </div>
+                `;
+            }
+            
+            for (let i = 1; i < 5; i++) {
+                container.innerHTML += `
+                    <div class="lobby-slot empty">
+                        <div class="avatar-sm">+</div>
+                        <div class="name" style="color:var(--text-muted);">Пригласить друга</div>
+                    </div>
+                `;
+            }
+        }
+
+        // --- 6. МАТЧ (Имитация) ---
+        async function startSearch() {
+            const btn = document.getElementById('btn-play');
+            btn.innerText = 'Поиск игры...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                navTo('match', document.querySelectorAll('.nav-item')[2]);
+                document.getElementById('match-title').innerText = 'Матч найден! (Тест)';
+                document.getElementById('match-content').style.display = 'block';
+                
+                renderMatchTeams();
+                renderMapBans();
+            }, 1500);
+        }
+
+        function renderMatchTeams() {
+            const ctCol = document.getElementById('team-ct');
+            const tCol = document.getElementById('team-t');
+            ctCol.innerHTML = ''; tCol.innerHTML = '';
+            
+            for (let i = 1; i <= 5; i++) {
+                ctCol.innerHTML += `<div class="match-player">Игрок КТ ${i}</div>`;
+                tCol.innerHTML += `<div class="match-player">Игрок Т ${i}</div>`;
+            }
+        }
+
+        function renderMapBans() {
+            const maps = ['Sandstone', 'Hanami', 'Rust', 'Duna', 'Province', 'Breeze', 'Prison'];
+            const container = document.getElementById('map-ban-list');
+            container.innerHTML = '';
+            
+            maps.forEach(map => {
+                container.innerHTML += `<button class="map-btn" onclick="banMap('${map}', this)">${map}</button>`;
+            });
+        }
+
+        function banMap(map, btn) {
+            btn.classList.add('banned');
+            btn.innerText = map + ' (БАН)';
+        }
+
+        function cancelMatch() {
+            navTo('play', document.querySelectorAll('.nav-item')[2]);
+            document.getElementById('btn-play').innerText = 'ИГРАТЬ';
+            document.getElementById('btn-play').disabled = false;
+        }
+
+        // Запуск проверки сессии при загрузке страницы
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) initUser();
+        });
+    </script>
+</body>
+</html>
