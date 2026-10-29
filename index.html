@@ -163,7 +163,14 @@
             show(id);
         }
 
-        // РЕГИСТРАЦИЯ С ЗАЩИТОЙ ОТ ОШИБОК СЕТИ
+        // Таймер для защиты от вечной загрузки
+        function timeoutPromise(promise, ms) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Превышено время ожидания. Проверьте интернет.")), ms))
+            ]);
+        }
+
         async function doRegister() {
             const btn = document.getElementById('btn-reg');
             const err = document.getElementById('err-reg');
@@ -178,7 +185,7 @@
             btn.innerText = "Загрузка..."; btn.disabled = true;
 
             try {
-                const { data, error } = await db.auth.signUp({ email, password: pass });
+                const { data, error } = await timeoutPromise(db.auth.signUp({ email, password: pass }), 10000);
                 
                 if (error) throw error;
 
@@ -191,12 +198,7 @@
                     initUser();
                 }
             } catch (e) {
-                // Если ошибка сети (Failed to fetch), выводим понятный текст
-                if (e.message.includes("fetch") || e.message.includes("network")) {
-                    err.innerText = "Ошибка сети. Проверьте интернет или откройте файл через Chrome.";
-                } else {
-                    err.innerText = e.message;
-                }
+                err.innerText = e.message;
                 err.style.display = 'block';
                 btn.innerText = "Создать аккаунт"; btn.disabled = false;
             }
@@ -215,11 +217,11 @@
             btn.innerText = "Загрузка..."; btn.disabled = true;
 
             try {
-                const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
+                const { data, error } = await timeoutPromise(db.auth.signInWithPassword({ email, password: pass }), 10000);
                 if (error) throw error;
                 initUser();
             } catch (e) {
-                err.innerText = "Неверный Email или Пароль (или ошибка сети)";
+                err.innerText = e.message;
                 err.style.display = 'block';
                 btn.innerText = "Войти"; btn.disabled = false;
             }
@@ -231,7 +233,7 @@
                 if (!session) return;
                 
                 const { data } = await db.from('players').select('*').eq('auth_user_id', session.user.id).single();
-                if (!data) throw new Error("Профиль не найден");
+                if (!data) throw new Error("Профиль не найден в базе");
 
                 user = data;
                 document.getElementById('nav').style.display = 'flex';
@@ -242,8 +244,10 @@
                 loadProfile();
                 renderLobby();
             } catch (e) {
-                document.getElementById('err-login').innerText = "Ошибка загрузки профиля: " + e.message;
+                document.getElementById('err-login').innerText = "Ошибка: " + e.message;
                 document.getElementById('err-login').style.display = 'block';
+                document.getElementById('btn-login').innerText = "Войти";
+                document.getElementById('btn-login').disabled = false;
             }
         }
 
